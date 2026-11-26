@@ -5,6 +5,8 @@
 
 Publicar el inventario autorizado del socio y convertir búsquedas, anuncios y consultas en visitas registradas. Lanzar con cinco propiedades y dos recorridos como metas del piloto. Hipótesis inicial: venta de casas usadas en una zona de Querétaro, preferentemente poniente si el inventario lo respalda. Confirmar colonias, precios y operación con el socio antes de publicar.
 
+> **Diseño del piloto.** Usaremos Figma Make para prototipar Inicio, Catálogo y Ficha de propiedad, primero en móvil y después en escritorio. Validaremos con el socio que pueda encontrar una casa dentro de un presupuesto, abrir la ficha y solicitar una visita. Cuando el diseño esté aprobado, agregaremos al PRD el enlace al prototipo y las referencias de tipografía, colores y estados de filtros y formularios. Copilot usará esas referencias para implementar el sitio en el repositorio.
+
 | Responsable | Entrega |
 |---|---|
 | José Luis | Producto, configuración del negocio digital y coordinación del lanzamiento |
