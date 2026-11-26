@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PropertyStatus {
+  draft
+  available
+  reserved
+  sold
+  withdrawn
+}
+
+enum PropertyOperation {
+  sale
+  rent
+}
+
+model Property {
+  id                    String            @id @default(cuid())
+  publicCode            String            @unique
+  sourceReference       String?           @unique
+  slug                  String            @unique
+  title                 String
+  description           String
+  type                  String
+  operation             PropertyOperation @default(sale)
+  status                PropertyStatus    @default(draft)
+  priceMxn              Decimal           @db.Decimal(14, 2)
+  municipality          String
+  neighborhood          String
+  bedrooms              Int
+  bathrooms             Decimal           @db.Decimal(3, 1)
+  parkingSpaces         Int
+  constructionAreaSqm   Decimal?          @db.Decimal(10, 2)
+  landAreaSqm           Decimal?          @db.Decimal(10, 2)
+  amenities             String[]
+  photos                Json
+  approximateLocation   Json?
+  tourUrl               String?
+  verifiedAt            DateTime?
+  authorizationReference String?
+  partnerNotes          String?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  @@index([status, operation, priceMxn])
+  @@index([municipality, neighborhood, status])
+}

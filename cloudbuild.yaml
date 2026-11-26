@@ -1,0 +1,19 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --build-arg
+      - SITE_URL=${_SITE_URL}
+      - --build-arg
+      - INDEXABLE=${_INDEXABLE}
+      - -t
+      - ${_IMAGE}
+      - .
+images:
+  - ${_IMAGE}
+substitutions:
+  _IMAGE: us-central1-docker.pkg.dev/PROJECT_ID/REPOSITORY/casa-queretaro-preview:manual
+  _SITE_URL: https://preview.example.invalid
+  _INDEXABLE: "false"
+options:
+  logging: CLOUD_LOGGING_ONLY
