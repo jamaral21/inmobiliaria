@@ -6,18 +6,12 @@ export function SiteFooter() {
       <div className="container footer-main">
         <div>
           <Link className="brand footer-brand" href="/">
-            <span className="brand-mark" aria-hidden="true">
-              <svg viewBox="0 0 32 32" fill="none">
-                <path d="M4 15.5 16 5l12 10.5" />
-                <path d="M8 14v13h16V14M13 27v-8h6v8" />
-              </svg>
+            <span className="brand-word">
+              habita<span className="brand-dot">.</span>
             </span>
-            <span>
-              <strong>casa</strong>
-              <small>QUERÉTARO</small>
-            </span>
+            <span className="brand-place">QUERÉTARO</span>
           </Link>
-          <p>Un buen lugar para empezar a sentirte en casa.</p>
+          <p>Un buen lugar cambia todo.</p>
         </div>
         <div className="footer-links">
           <Link href="/propiedades">Ver propiedades</Link>
@@ -26,8 +20,8 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="container footer-bottom">
-        <span>© {new Date().getFullYear()} Casa Querétaro</span>
-        <span>Vista de producto · datos de demostración</span>
+        <span>© {new Date().getFullYear()} Habita Querétaro.</span>
+        <span>Catálogo demostrativo · datos ficticios</span>
       </div>
     </footer>
   );

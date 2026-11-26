@@ -1,4 +1,4 @@
-export const siteName = "Casa Querétaro";
+export const siteName = "Habita Querétaro";
 export const siteDescription =
   "Encuentra casas en venta en Querétaro con información clara y acompañamiento cercano.";
 

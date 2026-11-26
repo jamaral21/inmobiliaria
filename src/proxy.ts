@@ -39,7 +39,7 @@ export function proxy(request: NextRequest) {
 
   return new NextResponse("Authentication required.", {
     status: 401,
-    headers: { "WWW-Authenticate": 'Basic realm="Casa Queretaro preview"' },
+    headers: { "WWW-Authenticate": 'Basic realm="Habita Queretaro preview"' },
   });
 }
 

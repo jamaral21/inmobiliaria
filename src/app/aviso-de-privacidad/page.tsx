@@ -3,7 +3,7 @@ import { DemoNotice } from "@/components/DemoNotice";
 
 export const metadata: Metadata = {
   title: "Aviso de privacidad",
-  description: "Aviso de privacidad de demostración para Casa Querétaro.",
+  description: "Aviso de privacidad de demostración para Habita Querétaro.",
   robots: { index: false, follow: true },
 };
 
