@@ -1,6 +1,6 @@
 # Casa Querétaro
 
-Vista inicial del catálogo inmobiliario descrito en [`docs/PRD_Inmobiliaria_Queretaro.md`](docs/PRD_Inmobiliaria_Queretaro.md). Esta entrega cubre **solo la fase 1**. Todo el inventario visible es ficticio y se identifica como demostración.
+Catálogo inmobiliario y panel privado de inventario descritos en [`docs/PRD_Inmobiliaria_Queretaro.md`](docs/PRD_Inmobiliaria_Queretaro.md). El seed local sigue usando fichas ficticias; el administrador puede editarlo o reemplazarlo sin reconstruir el sitio.
 
 ## Requisitos
 
@@ -36,19 +36,47 @@ npm run test:db
 
 Para apagar PostgreSQL sin borrar el volumen, ejecuta `docker compose stop postgres`. Para eliminar también todos los datos locales de prueba, ejecuta `docker compose down --volumes`.
 
-## Rutas de la fase 1
+## Administración de inventario
+
+Abre `/admin` directamente; no hay enlaces desde la navegación pública, el footer ni el sitemap. El acceso usa Google OAuth y permite únicamente la dirección exacta configurada en `ADMIN_EMAIL`. No hay registro público, invitaciones ni gestión de otras cuentas. La primera sesión autorizada crea la cuenta interna; cada página y escritura administrativa vuelve a validar la sesión y la identidad en el servidor.
+
+Para desarrollo local:
+
+1. Crea un OAuth client de tipo aplicación web en Google Cloud Console. Añade `http://localhost:3000/api/auth/callback/google` como URI de redirección autorizada.
+2. Configura `ADMIN_EMAIL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` en `.env` (nunca en Git). Genera un secreto con `openssl rand -base64 32`.
+3. Aplica la migración con `npm run db:migrate` y abre `/admin`.
+
+En Cloud Run, `BETTER_AUTH_URL` debe ser el origen HTTPS del servicio y la URI de Google debe ser `https://DOMINIO/api/auth/callback/google`. Guarda `DATABASE_URL`, `BETTER_AUTH_SECRET` y las credenciales de OAuth en Secret Manager; configura `ADMIN_EMAIL` y `BETTER_AUTH_URL` como variables no secretas. El build no requiere credenciales OAuth.
+
+Si se pierde el acceso, confirma que la dirección Google verificada coincide con `ADMIN_EMAIL` y que OAuth y la base de datos están disponibles. Si se requiere reiniciar la cuenta interna, respalda la base y, con acceso administrativo autorizado, elimina solo la fila de esa dirección:
+
+```sql
+DELETE FROM auth_user WHERE lower(email) = lower('ADMIN_EMAIL');
+```
+
+Las sesiones y cuentas OAuth se eliminan por cascada; la cuenta autorizada se crea de nuevo al iniciar sesión. No agregues una ruta de registro ni insertes usuarios manualmente.
+
+El panel permite editar fichas incompletas como borrador, muestra los datos faltantes para publicar y conserva el ID y código público al editar. La primera foto es portada; las líneas de la galería se pueden reordenar y cada foto requiere URL HTTPS y texto alternativo. No se suben archivos: se conservan URLs HTTPS persistentes. Los campos de autorización, referencia externa y notas del socio se editan únicamente en administración y no se incluyen en el repositorio de datos públicos. Cambiar el slug de una ficha previamente publicada registra una redirección permanente.
+
+La importación CSV requiere estos encabezados: `sourceReference`, `slug`, `title`, `description`, `type`, `operation`, `priceMxn`, `municipality`, `neighborhood`, `bedrooms`, `bathrooms`, `parkingSpaces`, `constructionAreaSqm`, `landAreaSqm`, `amenities`, `photos`, `approximateLocation`, `tourUrl`, `verifiedAt`, `authorizationReference` y `partnerNotes`. Usa `sourceReference` estable, amenidades separadas por `|`, fotos con formato `URL|texto alternativo;URL|texto alternativo`, ubicación aproximada como JSON y fecha de verificación `YYYY-MM-DD`. La vista previa muestra filas inválidas, altas, cambios y filas sin cambios; al aplicar, las propiedades nuevas quedan como borradores y reimportar un archivo sin cambios no crea duplicados ni reescribe los registros.
+
+Para aplicar migraciones en un entorno ya desplegado, respalda primero la base y ejecuta `npm run db:migrate:deploy` con el `DATABASE_URL` de ese entorno. La migración del panel es aditiva: conserva propiedades y añade tablas de autenticación y redirecciones, y permite valores faltantes únicamente para fichas incompletas.
+
+## Rutas públicas y privadas
 
 | Ruta | Comportamiento |
 |---|---|
 | `/` | Inicio, búsqueda y propiedades destacadas |
 | `/propiedades` | Catálogo con filtros GET combinables por zona, tipo, recámaras y presupuesto máximo |
-| `/propiedades/[slug]` | Ficha disponible; las fichas reservadas/vendidas de muestra indican estado y no ofrecen CTA |
+| `/propiedades/[slug]` | Ficha disponible; las fichas reservadas/vendidas indican estado y no ofrecen CTA |
 | `/casas-en-venta/[zona]` | Listado de muestra; no indexable mientras el contenido editorial no sea validado |
+| `/admin` | Administración privada, edición, estados y previsualización del inventario |
+| `/admin/import` | Vista previa e importación CSV idempotente |
 | `/vende-tu-casa` | Interfaz de formulario en modo demo, sin persistencia |
 | `/aviso-de-privacidad` | Texto provisional, explícitamente pendiente de aprobación |
 | `/robots.txt`, `/sitemap.xml` | No indexación por defecto; sitemap vacío en preview |
 
-El catálogo público y el sitemap solo incluyen propiedades `available`; el catálogo pagina seis resultados por página. Las fichas `draft` y `withdrawn` devuelven 404. Las fichas `reserved` y `sold` se pueden consultar en la demo con estado visible, `noindex` y sin CTA. Los filtros y el número de página se conservan en la URL y no se indexan.
+El catálogo público y el sitemap solo incluyen propiedades `available`; el catálogo pagina seis resultados por página. Las fichas `draft` y `withdrawn` devuelven 404. Las fichas `reserved` y `sold` conservan su ficha con estado visible, `noindex` y sin CTA. Los filtros y el número de página se conservan en la URL y no se indexan.
 
 ## Verificaciones
 
@@ -105,10 +133,13 @@ La revisión de Cloud Run desplegada actualmente sigue usando la imagen previa, 
 
 La base PostgreSQL descrita en Desarrollo local solo corre en Docker y no se comparte con Cloud Run. Para cerrar la vista previa, elimina el servicio y revoca las políticas de acceso y secretos de demo.
 
-## Fase 2 pendiente
+## Despliegue de administración en Cloud Run
 
-- Aprovisionar PostgreSQL administrado para Cloud Run con credenciales en Secret Manager; migrar datos reales únicamente con autorización.
-- Implementar `/admin` con autenticación y permisos, importación CSV con vista previa, edición y publicación; ocultar datos internos de la API pública.
-- Añadir galería administrable y carga de imágenes con limpieza de metadatos; recorrido 360° opcional.
+El servicio actual `inmobiliaria-staging` no tiene base de datos PostgreSQL configurada. Para probar `/admin` y que el catálogo cambie sin redeploy hace falta aprovisionar una instancia de Cloud SQL para staging, crear una base y usuario dedicados, conectar la identidad de servicio de Cloud Run, guardar `DATABASE_URL` y las credenciales OAuth en Secret Manager y aplicar las migraciones. No se ha creado ni desplegado ningún recurso de pago. La carga de archivos no está implementada, por lo que Cloud Storage no es un requisito de esta entrega.
+
+- La migración `20261127100000_admin_inventory` es aditiva y no borra el inventario.
+- Mantén staging con `INDEXABLE=false`; el contenido administrativo y el login declaran `noindex`.
+- Mantén el inventario de staging separado del de producción y no cargues datos autorizados sin aprobación.
+- La galería usa URLs HTTPS existentes y el recorrido 360° es opcional.
 - Validar inventario, zonas, contenido editorial, aviso de privacidad, marca y criterios de acceso con el socio antes de indexar.
 - No implementar en esta entrega los leads persistentes, integración CRM, WhatsApp, chatbot, eventos analíticos ni webhooks de fases posteriores.

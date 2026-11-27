@@ -331,7 +331,7 @@ export function FigmaExperienceProvider({ children }: { children: ReactNode }) {
         {modal?.kind === "gallery" && selectedImage && (
           <div className="figma-gallery-modal">
             <div className="eyebrow">
-              {modal.propertyName} · GALERÍA DE DEMOSTRACIÓN · {modal.publicCode}
+              {modal.propertyName} · GALERÍA · {modal.publicCode}
             </div>
             <Image
               className="figma-full-image"
@@ -339,6 +339,7 @@ export function FigmaExperienceProvider({ children }: { children: ReactNode }) {
               alt={selectedImage.alt}
               width={1600}
               height={1000}
+              unoptimized
               priority
             />
             <div className="figma-gallery-controls">

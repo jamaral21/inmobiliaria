@@ -20,9 +20,9 @@ export async function generateMetadata({ params }: { params: RouteParams }): Pro
   const { zona } = await params;
   const zone = await zoneFromSlug(zona);
   return {
-    title: zone ? `Casas en venta en ${zone}` : "Zona no encontrada",
+    title: zone ? `Propiedades en ${zone}` : "Zona no encontrada",
     description: zone
-      ? `Explora propiedades de demostración en ${zone}, Querétaro.`
+      ? `Explora propiedades disponibles en ${zone}, Querétaro.`
       : undefined,
     robots: { index: false, follow: true },
   };
@@ -33,15 +33,15 @@ export default async function ZonePage({ params }: { params: RouteParams }) {
   const zone = await zoneFromSlug(zona);
   if (!zone) notFound();
 
-  const properties = await listAvailableProperties();
+  const properties = await listAvailableProperties("sale");
   const listings = filterAvailableProperties(properties, { zone });
   return (
     <div className="container page-shell">
       <Breadcrumbs items={[{ label: "Inicio", href: "/" }, { label: "Zonas", href: "/propiedades" }, { label: zone }]} />
       <div className="page-intro">
         <span className="eyebrow">Explora Querétaro</span>
-        <h1>Casas en venta en {zone}.</h1>
-        <p>Una selección de viviendas de demostración en esta zona.</p>
+        <h1>Propiedades en {zone}.</h1>
+        <p>Encuentra una propiedad para tu siguiente etapa.</p>
       </div>
       <DemoNotice />
       <p className="editorial-pending">

@@ -3,8 +3,8 @@ export function DemoNotice({ compact = false }: { compact?: boolean }) {
     <div className={`demo-notice${compact ? " demo-notice-compact" : ""}`}>
       <span className="demo-notice-dot" aria-hidden="true" />
       <span>
-        <strong>Catálogo de demostración.</strong> Inmuebles, precios, fotos y
-        disponibilidad son ficticios; no representan una oferta real.
+        <strong>Contenido editorial de muestra.</strong> Confirma la disponibilidad y los datos de
+        cada propiedad antes de tomar una decisión.
       </span>
     </div>
   );

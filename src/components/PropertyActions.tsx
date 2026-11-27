@@ -6,14 +6,16 @@ export function PropertyActions({
   propertyName,
   location,
   price,
+  tourUrl,
   variant = "sidebar",
 }: {
   propertyName: string;
   location: string;
   price?: string;
+  tourUrl?: string;
   variant?: "sidebar" | "mobile";
 }) {
-  const { openVisit, openContact, openTour } = useFigmaExperience();
+  const { openVisit, openContact } = useFigmaExperience();
 
   if (variant === "mobile") {
     return (
@@ -55,41 +57,38 @@ export function PropertyActions({
         </svg>
         Consultar por WhatsApp
       </button>
-      <button
-        className="pdp-tour-link"
-        type="button"
-        onClick={() => openTour(propertyName, location)}
-      >
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M4 9c-4 6 20 6 16 0M17 5l4 4-4 4M5 17h14" />
-          <circle cx="12" cy="7" r="2" />
-        </svg>
-        Ver recorrido 360°
-      </button>
+      {tourUrl && (
+        <a className="pdp-tour-link" href={tourUrl} target="_blank" rel="noreferrer">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 9c-4 6 20 6 16 0M17 5l4 4-4 4M5 17h14" />
+            <circle cx="12" cy="7" r="2" />
+          </svg>
+          Ver recorrido 360°
+        </a>
+      )}
     </>
   );
 }
 
 export function PropertyTourButton({
-  propertyName,
-  location,
+  tourUrl,
 }: {
-  propertyName: string;
-  location: string;
+  tourUrl?: string;
 }) {
-  const { openTour } = useFigmaExperience();
+  if (!tourUrl) return null;
   return (
-    <button
+    <a
       className="pdp-tour-note"
-      type="button"
-      onClick={() => openTour(propertyName, location)}
+      href={tourUrl}
+      target="_blank"
+      rel="noreferrer"
     >
       <span className="pdp-tour-icon" aria-hidden="true">360°</span>
       <span>
-        <strong>Recorrido inmersivo · demo</strong>
-        <small>Explora vistas ilustrativas de sala y cocina.</small>
+        <strong>Recorrido inmersivo</strong>
+        <small>Explora la propiedad en 360°.</small>
       </span>
       <span className="pdp-tour-arrow" aria-hidden="true">↗</span>
-    </button>
+    </a>
   );
 }

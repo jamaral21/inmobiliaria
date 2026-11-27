@@ -18,7 +18,7 @@ export function SiteFooter() {
         </div>
         <div className="footer-bottom">
           <span>© {new Date().getFullYear()} Habita Querétaro.</span>
-          <span>Catálogo demostrativo · datos e imágenes ficticios</span>
+          <span>Propiedades en Querétaro</span>
           <div className="footer-links">
             <Link href="/vende-tu-casa">Vende tu casa</Link>
             <Link href="/aviso-de-privacidad">Aviso de privacidad</Link>

@@ -17,11 +17,12 @@ export function PropertyCard({ property }: { property: Property }) {
             src={property.image}
             alt={property.imageAlt}
             fill
+            unoptimized
             sizes="(max-width: 720px) 100vw, (max-width: 1100px) 50vw, 33vw"
           />
         </Link>
         <span className="figma-property-tag">
-          {property.type} en venta · demo
+          {property.type} en {property.operation === "rent" ? "renta" : "venta"}
         </span>
         <PropertyFavoriteButton
           propertyId={property.id}
