@@ -19,7 +19,7 @@ export type Property = {
   bedrooms: number;
   bathrooms: number;
   parkingSpaces: number;
-  constructionArea: number;
+  constructionArea?: number;
   landArea?: number;
   amenities: string[];
   image: string;

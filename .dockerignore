@@ -5,6 +5,7 @@ node_modules
 .env.*
 !.env.example
 coverage
+local
 npm-debug.log
 README.md
 docs

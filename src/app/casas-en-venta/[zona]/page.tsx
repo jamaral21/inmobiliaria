@@ -3,25 +3,22 @@ import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { DemoNotice } from "@/components/DemoNotice";
 import { PropertyCard } from "@/components/PropertyCard";
-import { filterAvailableProperties, getPropertyZones, properties } from "@/lib/properties";
+import { filterAvailableProperties } from "@/lib/properties";
+import { getPropertyZones, listAvailableProperties } from "@/lib/property-repository";
 
 type RouteParams = Promise<{ zona: string }>;
 
-export function generateStaticParams() {
-  return getPropertyZones().map((zone) => ({
-    zona: zone.toLowerCase().replaceAll(" ", "-"),
-  }));
-}
+export const dynamic = "force-dynamic";
 
-function zoneFromSlug(slug: string) {
-  return getPropertyZones().find(
+async function zoneFromSlug(slug: string) {
+  return (await getPropertyZones()).find(
     (zone) => zone.toLowerCase().replaceAll(" ", "-") === slug,
   );
 }
 
 export async function generateMetadata({ params }: { params: RouteParams }): Promise<Metadata> {
   const { zona } = await params;
-  const zone = zoneFromSlug(zona);
+  const zone = await zoneFromSlug(zona);
   return {
     title: zone ? `Casas en venta en ${zone}` : "Zona no encontrada",
     description: zone
@@ -33,9 +30,10 @@ export async function generateMetadata({ params }: { params: RouteParams }): Pro
 
 export default async function ZonePage({ params }: { params: RouteParams }) {
   const { zona } = await params;
-  const zone = zoneFromSlug(zona);
+  const zone = await zoneFromSlug(zona);
   if (!zone) notFound();
 
+  const properties = await listAvailableProperties();
   const listings = filterAvailableProperties(properties, { zone });
   return (
     <div className="container page-shell">

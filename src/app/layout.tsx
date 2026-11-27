@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { FigmaExperienceProvider } from "@/components/FigmaExperienceProvider";
 import { siteDescription, siteName, siteUrl } from "@/lib/site";
 import "./globals.css";
 
@@ -34,12 +35,14 @@ export default function RootLayout({
   return (
     <html lang="es-MX">
       <body>
-        <a className="skip-link" href="#contenido">
-          Saltar al contenido
-        </a>
-        <SiteHeader />
-        <main id="contenido">{children}</main>
-        <SiteFooter />
+        <FigmaExperienceProvider>
+          <a className="skip-link" href="#contenido">
+            Saltar al contenido
+          </a>
+          <SiteHeader />
+          <main id="contenido">{children}</main>
+          <SiteFooter />
+        </FigmaExperienceProvider>
       </body>
     </html>
   );

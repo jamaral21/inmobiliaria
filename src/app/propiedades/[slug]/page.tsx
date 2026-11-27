@@ -1,27 +1,22 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { DemoLeadForm } from "@/components/DemoLeadForm";
-import { DemoNotice } from "@/components/DemoNotice";
+import { PropertyActions, PropertyTourButton } from "@/components/PropertyActions";
 import { PropertyCard } from "@/components/PropertyCard";
+import { PropertyGallery } from "@/components/PropertyGallery";
 import {
-  findPublicProperty,
-  getIndexableProperties,
-  properties,
+  filterAvailableProperties,
 } from "@/lib/properties";
+import {
+  getIndexableProperties,
+  getPublicProperty,
+} from "@/lib/property-repository";
 import { absoluteUrl, formatPrice, indexingEnabled } from "@/lib/site";
 
 type RouteParams = Promise<{ slug: string }>;
 
-export async function generateStaticParams() {
-  return properties
-    .filter((property) => ["available", "reserved", "sold"].includes(property.status))
-    .map((property) => ({ slug: property.slug }));
-}
-
-export const dynamicParams = false;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -29,7 +24,7 @@ export async function generateMetadata({
   params: RouteParams;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const property = findPublicProperty(slug);
+  const property = await getPublicProperty(slug);
   if (!property) return { title: "Propiedad no encontrada" };
   const indexable = indexingEnabled && property.status === "available";
   return {
@@ -49,13 +44,13 @@ export async function generateMetadata({
 
 export default async function PropertyPage({ params }: { params: RouteParams }) {
   const { slug } = await params;
-  const property = findPublicProperty(slug);
+  const property = await getPublicProperty(slug);
   if (!property) notFound();
 
   const available = property.status === "available";
-  const related = getIndexableProperties()
+  const related = filterAvailableProperties(await getIndexableProperties())
     .filter((item) => item.id !== property.id)
-    .slice(0, 2);
+    .slice(0, 3);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "RealEstateListing",
@@ -82,76 +77,158 @@ export default async function PropertyPage({ params }: { params: RouteParams }) 
           { label: property.title },
         ]}
       />
-      <DemoNotice compact />
-      <div className="property-detail-grid">
-        <div className="property-detail-main">
-          <div className="property-hero-image">
-            <Image
-              src={property.image}
-              alt={property.imageAlt}
-              fill
-              priority
-              sizes="(max-width: 900px) 100vw, 66vw"
-            />
-            <span className={`status-pill status-${property.status}`}>
-              {available ? "Disponible · demo" : property.status === "reserved" ? "Reservada · demo" : "Vendida · demo"}
-            </span>
-          </div>
-          <div className="property-title-row">
+      <header className="pdp-heading">
+        <div>
+          <p className="eyebrow">
+            {property.type} en venta · {property.zone}, Querétaro · demo
+          </p>
+          <h1>{property.title}</h1>
+          <p className="pdp-location">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z" />
+              <circle cx="12" cy="10" r="2.5" />
+            </svg>
+            {property.neighborhood}, Querétaro
+          </p>
+        </div>
+        {/* TODO: Re-enable the save property control when favorites are ready for release. */}
+      </header>
+
+      <PropertyGallery
+        image={property.image}
+        imageAlt={property.imageAlt}
+        title={property.title}
+        publicCode={property.publicCode}
+        statusLabel={
+          available
+            ? "Disponible · demo"
+            : property.status === "reserved"
+              ? "Reservada · demo"
+              : "Vendida · demo"
+        }
+      />
+
+      <div className="pdp-layout">
+        <div className="pdp-main">
+          <section className="pdp-specs" aria-label="Características principales">
             <div>
-              <p className="eyebrow">{property.type} · {property.neighborhood}, Querétaro</p>
-              <h1>{property.title}</h1>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M3 18V7m18 11v-7H3m0 5h18M6 11V6h12v5M12 6v5" />
+              </svg>
+              <strong>{property.bedrooms}</strong>
+              <span>Recámaras</span>
             </div>
-            <p className="property-detail-price">{formatPrice(property.price)}</p>
-          </div>
-          <div className="detail-facts">
-            <div><strong>{property.bedrooms}</strong><span>Recámaras</span></div>
-            <div><strong>{property.bathrooms}</strong><span>Baños</span></div>
-            <div><strong>{property.parkingSpaces}</strong><span>Estacionamientos</span></div>
-            <div><strong>{property.constructionArea} m²</strong><span>Construcción</span></div>
-            {property.landArea && <div><strong>{property.landArea} m²</strong><span>Terreno</span></div>}
-          </div>
-          <section className="detail-section">
+            <div>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M3 12h18l-2 7H6l-3-7Zm3 7v2m12-2v2M5 12V5a2 2 0 0 1 4 0v2" />
+              </svg>
+              <strong>{property.bathrooms}</strong>
+              <span>Baños</span>
+            </div>
+            {property.constructionArea !== undefined && (
+              <div>
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <rect x="4" y="4" width="16" height="16" rx="1" />
+                  <path d="m8 16 8-8m-6 0h6v6" />
+                </svg>
+                <strong>{property.constructionArea} m²</strong>
+                <span>Construcción</span>
+              </div>
+            )}
+            <div>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                {property.landArea ? (
+                  <>
+                    <rect x="4" y="4" width="16" height="16" rx="1" />
+                    <path d="M8 8h8v8H8zM4 10h4m8 4h4M10 4v4m4 8v4" />
+                  </>
+                ) : (
+                  <path d="M3 17h18l-2-7H5l-2 7Zm3 0v3m12-3v3M5 10V7h14v3" />
+                )}
+              </svg>
+              <strong>{property.landArea ?? property.parkingSpaces} {property.landArea ? "m²" : ""}</strong>
+              <span>{property.landArea ? "Terreno" : "Estacionamientos"}</span>
+            </div>
+          </section>
+          <section className="pdp-description">
             <span className="eyebrow">La propiedad</span>
-            <h2>Un espacio para vivirlo a tu manera.</h2>
+            <h2>
+              Un espacio para <em>hacerlo tuyo.</em>
+            </h2>
             <p>{property.description}</p>
           </section>
-          <section className="detail-section">
-            <span className="eyebrow">Detalles</span>
+          <section className="pdp-amenities">
+            <span className="eyebrow">Los detalles hacen el hogar</span>
             <h2>Lo que ofrece</h2>
-            <ul className="amenity-list">
-              {property.amenities.map((amenity) => <li key={amenity}>{amenity}</li>)}
+            <ul>
+              {property.amenities.map((amenity) => (
+                <li key={amenity}>
+                  <span aria-hidden="true">✓</span>
+                  {amenity}
+                </li>
+              ))}
             </ul>
           </section>
+          <PropertyTourButton
+            propertyName={property.title}
+            location={property.neighborhood}
+          />
+          <p className="pdp-disclaimer">
+            Propiedad de demostración. Precio, disponibilidad, fotografías y características son
+            ficticios; no representan una oferta real.
+          </p>
         </div>
-        <aside className="property-sidebar">
-          <div className="sidebar-card">
-            <span className="eyebrow">{property.publicCode}</span>
-            <p className="sidebar-price">{formatPrice(property.price)}</p>
-            <p className="sidebar-location">{property.neighborhood}, Querétaro</p>
+        <aside className="pdp-sidebar">
+          <div className="pdp-sidebar-card">
+            <span className="eyebrow">Tu próximo comienzo · {property.publicCode}</span>
+            <p className="pdp-price">{formatPrice(property.price)} <span>MXN</span></p>
+            <p className="pdp-price-note">Precio de muestra · No incluye gastos de escrituración.</p>
+            <div className="pdp-sidebar-divider" />
+            <h2>¿Te imaginas viviendo aquí?</h2>
+            <p>Conoce cada rincón y descubre si podría ser tu lugar.</p>
             {available ? (
-              <Link className="button button-dark button-full" href="#solicitar-visita">
-                Solicitar una visita <span aria-hidden="true">↗</span>
-              </Link>
+              <PropertyActions
+                propertyName={property.title}
+                location={property.neighborhood}
+              />
             ) : (
               <div className="unavailable-note">
                 Esta propiedad no está disponible. No se reciben solicitudes sobre este inmueble.
               </div>
             )}
-            <p className="sidebar-demo">Esta ficha y sus datos son ficticios.</p>
+            <p className="pdp-sidebar-reassurance">
+              <span aria-hidden="true">✓</span>
+              Demo solamente · No se enviarán ni guardarán datos
+            </p>
           </div>
         </aside>
       </div>
-      {available && <DemoLeadForm propertyCode={property.publicCode} />}
-      <section className="related-section">
+      <section className="pdp-related">
         <div className="section-heading">
-          <div><span className="eyebrow">Más para explorar</span><h2>También podría interesarte</h2></div>
-          <Link className="text-link" href="/propiedades">Ver catálogo →</Link>
+          <div>
+            <span className="eyebrow">Otras formas de sentirte en casa</span>
+            <h2>
+              También podrían <em>ser tu lugar.</em>
+            </h2>
+          </div>
+          <Link className="text-link" href="/propiedades">
+            Ver catálogo <span aria-hidden="true">→</span>
+          </Link>
         </div>
         <div className="property-grid">
-          {related.map((item) => <PropertyCard key={item.id} property={item} />)}
+          {related.map((item) => (
+            <PropertyCard key={item.id} property={item} />
+          ))}
         </div>
       </section>
+      {available && (
+        <PropertyActions
+          propertyName={property.title}
+          location={property.neighborhood}
+          price={formatPrice(property.price)}
+          variant="mobile"
+        />
+      )}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}

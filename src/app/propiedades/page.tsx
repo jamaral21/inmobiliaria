@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { DemoNotice } from "@/components/DemoNotice";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PropertyCard } from "@/components/PropertyCard";
 import { SearchForm } from "@/components/SearchForm";
 import {
   filterAvailableProperties,
   paginateProperties,
-  properties,
 } from "@/lib/properties";
+import { listAvailableProperties } from "@/lib/property-repository";
 import { indexingEnabled } from "@/lib/site";
 
 type SearchParams = Promise<{
@@ -62,6 +62,7 @@ export default async function PropertiesPage({
   searchParams: SearchParams;
 }) {
   const params = await searchParams;
+  const properties = await listAvailableProperties();
   const maxPrice = Number(params.precioMax);
   const bedrooms = Number(params.recamaras);
   const filtered = filterAvailableProperties(properties, {
@@ -77,87 +78,82 @@ export default async function PropertiesPage({
   );
 
   return (
-    <div className="container page-shell">
-      <div className="page-intro">
-        <span className="eyebrow">Catálogo</span>
-        <h1>Encuentra tu próximo espacio.</h1>
-        <p>Busca entre propiedades de muestra en distintas zonas de Querétaro.</p>
+    <section className="container figma-catalog" aria-labelledby="catalog-heading">
+      <Breadcrumbs
+        items={[
+          { label: "Inicio", href: "/" },
+          { label: "Catálogo" },
+        ]}
+      />
+      <span className="eyebrow">UN LUGAR PARA CADA HISTORIA</span>
+      <h1 id="catalog-heading">
+        Tu nueva vida <em>empieza aquí.</em>
+      </h1>
+      <p className="page-description">
+        Explora casas y departamentos de demostración en las mejores zonas de Querétaro.
+      </p>
+      <SearchForm
+        filters={{
+          zone: params.zona,
+          type: params.tipo,
+          bedrooms: Number.isFinite(bedrooms) && bedrooms > 0 ? bedrooms : undefined,
+          maxPrice: Number.isFinite(maxPrice) && maxPrice > 0 ? maxPrice : undefined,
+        }}
+      />
+      <div className="figma-results-heading">
+        <span>
+          <strong>
+            {page.totalCount} {page.totalCount === 1 ? "propiedad" : "propiedades"}
+          </strong>{" "}
+          para imaginar tu futuro · datos de demostración
+        </span>
+        {(params.zona || params.tipo || params.recamaras || params.precioMax) && (
+          <Link className="text-link" href="/propiedades">
+            Limpiar filtros <span aria-hidden="true">×</span>
+          </Link>
+        )}
       </div>
-      <DemoNotice />
-      <section className="catalog-layout" aria-labelledby="catalog-heading">
-        <aside className="filter-panel">
-          <span className="eyebrow">Afina tu búsqueda</span>
-          <h2 id="catalog-heading">Filtros</h2>
-          <SearchForm
-            filters={{
-              zone: params.zona,
-              type: params.tipo,
-              bedrooms: Number.isFinite(bedrooms) && bedrooms > 0 ? bedrooms : undefined,
-              maxPrice: Number.isFinite(maxPrice) && maxPrice > 0 ? maxPrice : undefined,
-            }}
-          />
-        </aside>
-        <div className="catalog-results">
-          <div className="results-heading">
-            <p>
-              <strong>{page.totalCount}</strong>{" "}
-              {page.totalCount === 1 ? "propiedad disponible" : "propiedades disponibles"}
-            </p>
-            <span>
-              {page.totalCount
-                ? `Mostrando ${page.firstIndex}–${page.lastIndex} de ${page.totalCount}`
-                : "Resultados de demostración"}
-            </span>
-          </div>
-          {page.totalCount ? (
-            <div className="property-grid">
-              {page.items.map((property) => (
-                <PropertyCard key={property.id} property={property} />
-              ))}
-            </div>
-          ) : (
-            <div className="empty-state">
-              <span className="empty-state-icon" aria-hidden="true">⌕</span>
-              <h2>No encontramos propiedades con esos filtros.</h2>
-              <p>Prueba con otra zona o amplía tu presupuesto.</p>
-              <Link className="button button-dark" href="/propiedades">
-                Limpiar filtros
-              </Link>
-            </div>
-          )}
-          {page.totalPages > 1 && (
-            <nav className="catalog-pagination" aria-label="Paginación del catálogo">
-              {page.currentPage > 1 && (
-                <Link
-                  href={pageHref(page.currentPage - 1, params)}
-                  aria-label="Página anterior"
-                >
-                  Anterior
-                </Link>
-              )}
-              {Array.from({ length: page.totalPages }, (_, index) => index + 1).map(
-                (pageNumber) => (
-                  <Link
-                    href={pageHref(pageNumber, params)}
-                    key={pageNumber}
-                    aria-current={pageNumber === page.currentPage ? "page" : undefined}
-                  >
-                    {pageNumber}
-                  </Link>
-                ),
-              )}
-              {page.currentPage < page.totalPages && (
-                <Link
-                  href={pageHref(page.currentPage + 1, params)}
-                  aria-label="Página siguiente"
-                >
-                  Siguiente
-                </Link>
-              )}
-            </nav>
-          )}
+      {page.totalCount ? (
+        <div className="property-grid figma-catalog-grid">
+          {page.items.map((property) => (
+            <PropertyCard key={property.id} property={property} />
+          ))}
         </div>
-      </section>
-    </div>
+      ) : (
+        <div className="empty-state figma-empty-state">
+          <span className="empty-state-icon" aria-hidden="true">⌕</span>
+          <h2>Tu lugar sigue por descubrir.</h2>
+          <p>Prueba otra zona o amplía tu presupuesto para encontrar más opciones.</p>
+          <Link className="button button-primary figma-primary" href="/propiedades">
+            Ver todas las propiedades
+          </Link>
+        </div>
+      )}
+      {page.totalPages > 1 && (
+        <nav className="catalog-pagination figma-pagination" aria-label="Paginación del catálogo">
+          {page.currentPage > 1 && (
+            <Link href={pageHref(page.currentPage - 1, params)} aria-label="Página anterior">
+              ← Anterior
+            </Link>
+          )}
+          {Array.from({ length: page.totalPages }, (_, index) => index + 1).map(
+            (pageNumber) => (
+              <Link
+                href={pageHref(pageNumber, params)}
+                key={pageNumber}
+                aria-current={pageNumber === page.currentPage ? "page" : undefined}
+              >
+                {pageNumber}
+              </Link>
+            ),
+          )}
+          {page.currentPage < page.totalPages && (
+            <Link href={pageHref(page.currentPage + 1, params)} aria-label="Página siguiente">
+              Siguiente →
+            </Link>
+          )}
+        </nav>
+      )}
+    </section>
   );
 }

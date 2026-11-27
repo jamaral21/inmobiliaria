@@ -3,7 +3,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { PropertyCard } from "@/components/PropertyCard";
 import { SearchForm } from "@/components/SearchForm";
-import { filterAvailableProperties, properties } from "@/lib/properties";
+import { filterAvailableProperties } from "@/lib/properties";
+import { listAvailableProperties } from "@/lib/property-repository";
 import { indexingEnabled, siteDescription, siteName } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -13,8 +14,10 @@ export const metadata: Metadata = {
   robots: { index: indexingEnabled, follow: indexingEnabled },
 };
 
-export default function HomePage() {
-  const featured = filterAvailableProperties(properties).slice(0, 3);
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const featured = filterAvailableProperties(await listAvailableProperties()).slice(0, 3);
 
   return (
     <>
@@ -99,23 +102,45 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="seller-callout container">
-        <div className="seller-callout-copy">
-          <span className="eyebrow">¿Tienes una propiedad?</span>
-          <h2>El siguiente hogar de alguien puede empezar contigo.</h2>
-          <p>Conoce cómo podemos ayudarte a presentar y promover tu casa.</p>
-          <Link className="button button-dark" href="/vende-tu-casa">
-            Quiero vender mi casa
-          </Link>
+      <section className="values container" id="nosotros" aria-labelledby="values-heading">
+        <div className="values-intro">
+          <span className="eyebrow">MÁS QUE BIENES RAÍCES</span>
+          <h2 id="values-heading">
+            Tu siguiente capítulo,
+            <br />
+            <em>bien acompañado.</em>
+          </h2>
+          <p>
+            Nos gusta Querétaro. Nos gusta conectar personas con lugares que hacen sentido para su
+            vida.
+          </p>
         </div>
-        <div className="seller-callout-image" role="img" aria-label="Interior acogedor de una casa">
-          <Image
-            src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=85"
-            alt=""
-            fill
-            sizes="(max-width: 760px) 100vw, 50vw"
-          />
+        <div className="value">
+          <span className="value-number">01 /</span>
+          <h3>Curaduría, no cantidad</h3>
+          <p>Casas elegidas por su ubicación, diseño y calidad de vida.</p>
         </div>
+        <div className="value">
+          <span className="value-number">02 /</span>
+          <h3>A tu ritmo, siempre</h3>
+          <p>Explora, pregunta y conoce cada ficha sin presión.</p>
+        </div>
+        <div className="value">
+          <span className="value-number">03 /</span>
+          <h3>De aquí, para ti</h3>
+          <p>Descubre distintas zonas y lo que hace especial a cada una.</p>
+        </div>
+      </section>
+
+      <section className="closing container">
+        <div>
+          <span className="eyebrow">EL SIGUIENTE PASO ES TUYO</span>
+          <h2>Imagina tu vida aquí.</h2>
+          <p>Nosotros te ayudamos a encontrar dónde.</p>
+        </div>
+        <Link className="button button-primary figma-primary" href="/propiedades">
+          Encuentra tu casa <span aria-hidden="true">→</span>
+        </Link>
       </section>
     </>
   );

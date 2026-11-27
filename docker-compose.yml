@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: habita_dev
+      POSTGRES_USER: habita
+      POSTGRES_PASSWORD: habita_dev_local_only
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - habita_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U habita -d habita_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  habita_postgres_data:

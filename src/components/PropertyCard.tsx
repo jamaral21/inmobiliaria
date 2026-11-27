@@ -1,29 +1,38 @@
 import Image from "next/image";
 import Link from "next/link";
+import { PropertyFavoriteButton } from "@/components/FigmaExperienceProvider";
 import type { Property } from "@/lib/properties";
 import { formatPrice } from "@/lib/site";
 
 export function PropertyCard({ property }: { property: Property }) {
   return (
-    <article className="property-card">
-      <Link
-        className="property-card-image"
-        href={`/propiedades/${property.slug}`}
-        aria-label={`Ver ${property.title}`}
-      >
-        <Image
-          src={property.image}
-          alt={property.imageAlt}
-          fill
-          sizes="(max-width: 720px) 100vw, (max-width: 1100px) 50vw, 33vw"
-        />
-        <span className="status-pill">Disponible · demo</span>
-        <span className="property-image-caption">
+    <article className="property-card figma-property-card">
+      <div className="property-card-image figma-card-photo">
+        <Link
+          className="figma-photo-link"
+          href={`/propiedades/${property.slug}`}
+          aria-label={`Ver ${property.title}`}
+        >
+          <Image
+            src={property.image}
+            alt={property.imageAlt}
+            fill
+            sizes="(max-width: 720px) 100vw, (max-width: 1100px) 50vw, 33vw"
+          />
+        </Link>
+        <span className="figma-property-tag">
           {property.type} en venta · demo
         </span>
-        <span className="image-code">{property.publicCode}</span>
-      </Link>
-      <div className="property-card-content">
+        <PropertyFavoriteButton
+          propertyId={property.id}
+          propertyName={property.title}
+        />
+        <span className="figma-photo-caption">
+          {property.zone}, QUERÉTARO
+          <span>{property.publicCode}</span>
+        </span>
+      </div>
+      <div className="property-card-content figma-card-content">
         <p className="property-price">
           {formatPrice(property.price)} <span>MXN</span>
         </p>
@@ -50,16 +59,18 @@ export function PropertyCard({ property }: { property: Property }) {
             </svg>
             {property.bathrooms} baños
           </span>
-          <span>
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <rect x="4" y="4" width="16" height="16" rx="1" />
-              <path d="m8 16 8-8m-6 0h6v6" />
-            </svg>
-            {property.constructionArea} m²
-          </span>
+          {property.constructionArea !== undefined && (
+            <span>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="4" y="4" width="16" height="16" rx="1" />
+                <path d="m8 16 8-8m-6 0h6v6" />
+              </svg>
+              {property.constructionArea} m²
+            </span>
+          )}
         </div>
         <Link
-          className="property-card-link"
+          className="property-card-link figma-card-more"
           href={`/propiedades/${property.slug}`}
         >
           Conocer propiedad

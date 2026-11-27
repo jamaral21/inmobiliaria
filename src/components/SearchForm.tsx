@@ -1,17 +1,18 @@
 import type { PropertyFilters } from "@/lib/properties";
-import { getPropertyZones } from "@/lib/properties";
+import { getPropertyZones } from "@/lib/property-repository";
 
-export function SearchForm({
+export async function SearchForm({
   filters = {},
   variant = "catalog",
 }: {
   filters?: PropertyFilters;
   variant?: "catalog" | "home";
 }) {
+  const zones = await getPropertyZones();
   const isHome = variant === "home";
   const bedroomsFilter = (
     <label>
-      {isHome ? <span>Recámaras</span> : "Recámaras"}
+      <span>{isHome ? "Recámaras" : "RECÁMARAS"}</span>
       <select
         name="recamaras"
         defaultValue={filters.bedrooms?.toString() ?? ""}
@@ -27,24 +28,21 @@ export function SearchForm({
 
   return (
     <form
-      className={`search-form${isHome ? " home-search-form" : ""}`}
+      className={`search-form figma-search-panel${isHome ? " home-search-form" : ""}`}
       action="/propiedades"
       method="get"
     >
       <label>
-        {isHome && (
-          <span>
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z" />
-              <circle cx="12" cy="10" r="2.5" />
-            </svg>
-            ¿Dónde quieres vivir?
-          </span>
-        )}
-        {!isHome && "Zona"}
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z" />
+            <circle cx="12" cy="10" r="2.5" />
+          </svg>
+          {isHome ? "¿DÓNDE QUIERES VIVIR?" : "ZONA"}
+        </span>
         <select name="zona" defaultValue={filters.zone ?? ""}>
           <option value="">Todas las zonas</option>
-          {getPropertyZones().map((zone) => (
+          {zones.map((zone) => (
             <option value={zone} key={zone}>
               {zone}
             </option>
@@ -53,7 +51,7 @@ export function SearchForm({
       </label>
       {!isHome && (
         <label>
-          Tipo
+          <span>TIPO DE PROPIEDAD</span>
           <select name="tipo" defaultValue={filters.type ?? ""}>
             <option value="">Casa o departamento</option>
             <option value="Casa">Casa</option>
@@ -63,11 +61,7 @@ export function SearchForm({
       )}
       {!isHome && bedroomsFilter}
       <label>
-        {isHome ? (
-          <span>Presupuesto máximo</span>
-        ) : (
-          "Presupuesto máximo"
-        )}
+        <span>PRESUPUESTO MÁXIMO</span>
         <select
           name="precioMax"
           defaultValue={filters.maxPrice?.toString() ?? ""}
@@ -81,12 +75,10 @@ export function SearchForm({
       </label>
       {isHome && bedroomsFilter}
       <button className="button button-primary search-submit" type="submit">
-        {isHome && (
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="10.8" cy="10.8" r="6.8" />
-            <path d="m16 16 4.5 4.5" />
-          </svg>
-        )}
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="10.8" cy="10.8" r="6.8" />
+          <path d="m16 16 4.5 4.5" />
+        </svg>
         Buscar propiedades
       </button>
     </form>
