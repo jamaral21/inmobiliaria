@@ -5,38 +5,24 @@ import {
   useFigmaExperience,
   type GalleryImage,
 } from "@/components/FigmaExperienceProvider";
-
-const referenceImages: GalleryImage[] = [
-  {
-    src: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1600&q=85",
-    alt: "Interior ilustrativo de una sala",
-    label: "Sala · Imagen de referencia",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1556912172-45b7abe8b7e1?auto=format&fit=crop&w=1200&q=85",
-    alt: "Interior ilustrativo de una cocina",
-    label: "Cocina · Imagen de referencia",
-  },
-];
+import type { PropertyPhoto } from "@/lib/properties";
 
 export function PropertyGallery({
-  image,
-  imageAlt,
+  photos,
   title,
   publicCode,
   statusLabel,
 }: {
-  image: string;
-  imageAlt: string;
+  photos: PropertyPhoto[];
   title: string;
   publicCode: string;
   statusLabel: string;
 }) {
   const { openGallery } = useFigmaExperience();
-  const images: GalleryImage[] = [
-    { src: image, alt: `${imageAlt} · imagen de demostración`, label: "Vista principal" },
-    ...referenceImages,
-  ];
+  const images: GalleryImage[] = photos.map((photo, index) => ({
+    ...photo,
+    label: index === 0 ? "Vista principal" : `Foto ${index + 1}`,
+  }));
 
   function showGallery(index: number) {
     openGallery(title, publicCode, images, index);
@@ -57,10 +43,11 @@ export function PropertyGallery({
             alt={item.alt}
             fill
             priority={index === 0}
+            unoptimized
             sizes={index === 0 ? "(max-width: 760px) 100vw, 65vw" : "(max-width: 760px) 50vw, 35vw"}
           />
           <span className="pdp-image-caption">
-            {index === 0 ? statusLabel : "Foto de referencia · demo"}
+            {index === 0 ? statusLabel : item.label}
           </span>
         </button>
       ))}

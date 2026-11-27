@@ -1,6 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import type { Property, PropertyStatus } from "@/lib/properties";
+import type { Property, PropertyPhoto, PropertyStatus } from "@/lib/properties";
 
 const publicStatuses: PropertyStatus[] = ["available", "reserved", "sold"];
 
@@ -9,16 +9,28 @@ function mapProperty(row: Prisma.PropertyGetPayload<object>): Property {
     throw new Error(`Unsupported property type "${row.type}" for ${row.slug}.`);
   }
 
-  const firstPhoto = Array.isArray(row.photos)
-    ? row.photos.find(
-        (photo): photo is Prisma.JsonObject =>
-          photo !== null && typeof photo === "object" && !Array.isArray(photo),
-      )
-    : undefined;
-  const image = firstPhoto?.src;
-  const imageAlt = firstPhoto?.alt;
-  if (typeof image !== "string" || typeof imageAlt !== "string") {
+  const photos: PropertyPhoto[] = Array.isArray(row.photos)
+    ? row.photos.flatMap((photo) => {
+        if (!photo || typeof photo !== "object" || Array.isArray(photo)) return [];
+        const image = photo as Prisma.JsonObject;
+        return typeof image.src === "string" && typeof image.alt === "string"
+          ? [{ src: image.src, alt: image.alt }]
+          : [];
+      })
+    : [];
+  const firstPhoto = photos[0];
+  if (!firstPhoto) {
     throw new Error(`Property ${row.slug} has no valid primary photo.`);
+  }
+  if (
+    row.priceMxn === null ||
+    row.municipality === null ||
+    row.neighborhood === null ||
+    row.bedrooms === null ||
+    row.bathrooms === null ||
+    row.parkingSpaces === null
+  ) {
+    throw new Error(`Published property ${row.slug} is missing required public data.`);
   }
 
   return {
@@ -28,6 +40,7 @@ function mapProperty(row: Prisma.PropertyGetPayload<object>): Property {
     title: row.title,
     description: row.description,
     type: row.type,
+    operation: row.operation,
     status: row.status,
     price: Number(row.priceMxn),
     zone: row.municipality,
@@ -41,8 +54,10 @@ function mapProperty(row: Prisma.PropertyGetPayload<object>): Property {
         : Number(row.constructionAreaSqm),
     landArea: row.landAreaSqm === null ? undefined : Number(row.landAreaSqm),
     amenities: row.amenities,
-    image,
-    imageAlt,
+    photos,
+    tourUrl: row.tourUrl ?? undefined,
+    image: firstPhoto.src,
+    imageAlt: firstPhoto.alt,
   };
 }
 
@@ -51,9 +66,9 @@ export async function listProperties() {
   return rows.map(mapProperty);
 }
 
-export async function listAvailableProperties() {
+export async function listAvailableProperties(operation?: Property["operation"]) {
   const rows = await prisma.property.findMany({
-    where: { status: "available", operation: "sale" },
+    where: { status: "available", ...(operation ? { operation } : {}) },
     orderBy: { id: "asc" },
   });
   return rows.map(mapProperty);
@@ -66,9 +81,16 @@ export async function getPublicProperty(slug: string) {
   return row ? mapProperty(row) : undefined;
 }
 
+export async function getPropertySlugRedirect(slug: string) {
+  return prisma.propertySlugRedirect.findUnique({
+    where: { slug },
+    select: { property: { select: { slug: true, status: true } } },
+  });
+}
+
 export async function getIndexableProperties() {
   const rows = await prisma.property.findMany({
-    where: { status: "available", operation: "sale" },
+    where: { status: "available" },
     orderBy: { id: "asc" },
   });
   return rows.map(mapProperty);
@@ -81,5 +103,5 @@ export async function getPropertyZones() {
     orderBy: { municipality: "asc" },
     select: { municipality: true },
   });
-  return zones.map(({ municipality }) => municipality);
+  return zones.flatMap(({ municipality }) => municipality ? [municipality] : []);
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PropertyActions, PropertyTourButton } from "@/components/PropertyActions";
 import { PropertyCard } from "@/components/PropertyCard";
@@ -11,6 +11,7 @@ import {
 import {
   getIndexableProperties,
   getPublicProperty,
+  getPropertySlugRedirect,
 } from "@/lib/property-repository";
 import { absoluteUrl, formatPrice, indexingEnabled } from "@/lib/site";
 
@@ -25,7 +26,13 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const property = await getPublicProperty(slug);
-  if (!property) return { title: "Propiedad no encontrada" };
+  if (!property) {
+    const redirectTo = await getPropertySlugRedirect(slug);
+    if (redirectTo?.property.status !== "draft" && redirectTo?.property.status !== "withdrawn") {
+      return { title: "Propiedad redirigida" };
+    }
+    return { title: "Propiedad no encontrada" };
+  }
   const indexable = indexingEnabled && property.status === "available";
   return {
     title: property.title,
@@ -45,7 +52,13 @@ export async function generateMetadata({
 export default async function PropertyPage({ params }: { params: RouteParams }) {
   const { slug } = await params;
   const property = await getPublicProperty(slug);
-  if (!property) notFound();
+  if (!property) {
+    const redirectTo = await getPropertySlugRedirect(slug);
+    if (redirectTo && !["draft", "withdrawn"].includes(redirectTo.property.status)) {
+      permanentRedirect(`/propiedades/${redirectTo.property.slug}`);
+    }
+    notFound();
+  }
 
   const available = property.status === "available";
   const related = filterAvailableProperties(await getIndexableProperties())
@@ -80,7 +93,7 @@ export default async function PropertyPage({ params }: { params: RouteParams }) 
       <header className="pdp-heading">
         <div>
           <p className="eyebrow">
-            {property.type} en venta · {property.zone}, Querétaro · demo
+            {property.type} en {(property.operation ?? "sale") === "sale" ? "venta" : "renta"} · {property.zone}, Querétaro
           </p>
           <h1>{property.title}</h1>
           <p className="pdp-location">
@@ -95,16 +108,15 @@ export default async function PropertyPage({ params }: { params: RouteParams }) 
       </header>
 
       <PropertyGallery
-        image={property.image}
-        imageAlt={property.imageAlt}
+        photos={property.photos ?? [{ src: property.image, alt: property.imageAlt }]}
         title={property.title}
         publicCode={property.publicCode}
         statusLabel={
           available
-            ? "Disponible · demo"
+            ? "Disponible"
             : property.status === "reserved"
-              ? "Reservada · demo"
-              : "Vendida · demo"
+              ? "Reservada"
+              : "Vendida"
         }
       />
 
@@ -169,20 +181,17 @@ export default async function PropertyPage({ params }: { params: RouteParams }) 
               ))}
             </ul>
           </section>
-          <PropertyTourButton
-            propertyName={property.title}
-            location={property.neighborhood}
-          />
+          <PropertyTourButton tourUrl={property.tourUrl} />
           <p className="pdp-disclaimer">
-            Propiedad de demostración. Precio, disponibilidad, fotografías y características son
-            ficticios; no representan una oferta real.
+            La disponibilidad y las características de esta propiedad pueden cambiar. Confirma los
+            detalles antes de tomar una decisión.
           </p>
         </div>
         <aside className="pdp-sidebar">
           <div className="pdp-sidebar-card">
             <span className="eyebrow">Tu próximo comienzo · {property.publicCode}</span>
             <p className="pdp-price">{formatPrice(property.price)} <span>MXN</span></p>
-            <p className="pdp-price-note">Precio de muestra · No incluye gastos de escrituración.</p>
+            <p className="pdp-price-note">No incluye gastos de escrituración.</p>
             <div className="pdp-sidebar-divider" />
             <h2>¿Te imaginas viviendo aquí?</h2>
             <p>Conoce cada rincón y descubre si podría ser tu lugar.</p>
@@ -190,6 +199,7 @@ export default async function PropertyPage({ params }: { params: RouteParams }) 
               <PropertyActions
                 propertyName={property.title}
                 location={property.neighborhood}
+                tourUrl={property.tourUrl}
               />
             ) : (
               <div className="unavailable-note">

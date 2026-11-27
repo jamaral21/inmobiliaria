@@ -40,9 +40,9 @@ export async function generateMetadata({
   const params = await searchParams;
   const hasFilters = Object.values(params).some(Boolean);
   return {
-    title: "Propiedades en venta",
+    title: "Propiedades en Querétaro",
     description:
-      "Explora casas y departamentos de demostración en Querétaro. Filtra por zona, tipo, recámaras y presupuesto.",
+      "Explora casas y departamentos en Querétaro. Filtra por zona, tipo, recámaras y presupuesto.",
     alternates: { canonical: "/propiedades" },
     robots: {
       index: indexingEnabled && !hasFilters,
@@ -90,7 +90,7 @@ export default async function PropertiesPage({
         Tu nueva vida <em>empieza aquí.</em>
       </h1>
       <p className="page-description">
-        Explora casas y departamentos de demostración en las mejores zonas de Querétaro.
+        Explora casas y departamentos en las mejores zonas de Querétaro.
       </p>
       <SearchForm
         filters={{
@@ -105,7 +105,7 @@ export default async function PropertiesPage({
           <strong>
             {page.totalCount} {page.totalCount === 1 ? "propiedad" : "propiedades"}
           </strong>{" "}
-          para imaginar tu futuro · datos de demostración
+          para imaginar tu futuro
         </span>
         {(params.zona || params.tipo || params.recamaras || params.precioMax) && (
           <Link className="text-link" href="/propiedades">

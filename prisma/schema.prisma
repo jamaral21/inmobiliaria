@@ -30,12 +30,12 @@ model Property {
   type                  String
   operation             PropertyOperation @default(sale)
   status                PropertyStatus    @default(draft)
-  priceMxn              Decimal           @db.Decimal(14, 2)
-  municipality          String
-  neighborhood          String
-  bedrooms              Int
-  bathrooms             Decimal           @db.Decimal(3, 1)
-  parkingSpaces         Int
+  priceMxn              Decimal?          @db.Decimal(14, 2)
+  municipality          String?
+  neighborhood          String?
+  bedrooms              Int?
+  bathrooms             Decimal?          @db.Decimal(3, 1)
+  parkingSpaces         Int?
   constructionAreaSqm   Decimal?          @db.Decimal(10, 2)
   landAreaSqm           Decimal?          @db.Decimal(10, 2)
   amenities             String[]
@@ -45,9 +45,81 @@ model Property {
   verifiedAt            DateTime?
   authorizationReference String?
   partnerNotes          String?
+  slugRedirects         PropertySlugRedirect[]
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
 
   @@index([status, operation, priceMxn])
   @@index([municipality, neighborhood, status])
+}
+
+model PropertySlugRedirect {
+  slug       String   @id
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@index([propertyId])
+}
+
+model AuthUser {
+  id            String        @id
+  name          String
+  email         String        @unique
+  emailVerified Boolean       @default(false)
+  image         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  sessions      AuthSession[]
+  accounts      AuthAccount[]
+
+  @@map("auth_user")
+}
+
+model AuthSession {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      AuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("auth_session")
+}
+
+model AuthAccount {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  AuthUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("auth_account")
+}
+
+model AuthVerification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("auth_verification")
 }

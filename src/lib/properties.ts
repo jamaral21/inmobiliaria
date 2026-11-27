@@ -5,6 +5,11 @@ export type PropertyStatus =
   | "sold"
   | "withdrawn";
 
+export type PropertyPhoto = {
+  src: string;
+  alt: string;
+};
+
 export type Property = {
   id: string;
   publicCode: string;
@@ -12,6 +17,7 @@ export type Property = {
   title: string;
   description: string;
   type: "Casa" | "Departamento";
+  operation?: "sale" | "rent";
   status: PropertyStatus;
   price: number;
   zone: string;
@@ -22,6 +28,8 @@ export type Property = {
   constructionArea?: number;
   landArea?: number;
   amenities: string[];
+  photos?: PropertyPhoto[];
+  tourUrl?: string;
   image: string;
   imageAlt: string;
 };

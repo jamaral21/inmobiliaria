@@ -12,11 +12,12 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
-    "test:db": "RUN_DB_TESTS=true tsx --test tests/database.integration.test.ts",
+    "test:db": "RUN_DB_TESTS=true tsx --test --test-concurrency=1 tests/*.integration.test.ts",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",
     "db:up": "docker compose up -d --wait",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:setup": "prisma migrate deploy && prisma db seed"
   },
@@ -24,7 +25,10 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@better-auth/prisma-adapter": "^1.7.28",
     "@prisma/client": "6.12.0",
+    "better-auth": "^1.7.28",
+    "csv-parse": "^7.0.3",
     "next": "16.4.6",
     "react": "19.3.1",
     "react-dom": "19.3.1"

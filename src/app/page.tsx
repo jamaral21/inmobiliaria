@@ -8,7 +8,7 @@ import { listAvailableProperties } from "@/lib/property-repository";
 import { indexingEnabled, siteDescription, siteName } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: `${siteName} | Casas en venta en Querétaro`,
+  title: `${siteName} | Propiedades en Querétaro`,
   description: siteDescription,
   alternates: { canonical: "/" },
   robots: { index: indexingEnabled, follow: indexingEnabled },
@@ -44,7 +44,7 @@ export default async function HomePage() {
         <div className="hero-image">
           <Image
             src="/images/casa-encino.png"
-            alt="Residencia de muestra con alberca y jardín; imagen de demostración"
+            alt="Residencia con alberca y jardín; imagen ilustrativa"
             fill
             priority
             sizes="(max-width: 760px) 100vw, 55vw"
@@ -56,8 +56,8 @@ export default async function HomePage() {
           </span>
           <Link className="hero-property" href="/propiedades">
             <span>
-              <small>EXPLORA EL CATÁLOGO · DEMO</small>
-              <strong>Casas para tu siguiente etapa.</strong>
+              <small>EXPLORA EL CATÁLOGO</small>
+              <strong>Propiedades para tu siguiente etapa.</strong>
             </span>
             <span className="circle-arrow" aria-hidden="true">↗</span>
           </Link>
@@ -74,7 +74,7 @@ export default async function HomePage() {
         <div className="home-search-note">
           <span>
             <span aria-hidden="true">✓</span>
-            Datos y precios ficticios; esta es una demostración.
+            Disponibilidad y precios sujetos a confirmación.
           </span>
           <span>Tu próximo hogar empieza aquí.</span>
         </div>
